@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+"""Simple HTTP download server."""
+
+import http.server
+import socketserver
+import argparse
+
+# Defaults
+DEFAULT_LPORT: str = "0.0.0.0"
+DEFAULT_PORT: int = 9000
+
+
+class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
+    """Custom HTTP request handler."""
+
+    def end_headers(self):
+        # Disable caching
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+
+class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+    """Custom TCPServer with threading support."""
+
+    # Allow address reuse
+    allow_reuse_address = True
+
+
+def parse_args():
+    """Parse and validate command-line arguments."""
+    parser = argparse.ArgumentParser(description="Simple HTTP download server.")
+    parser.add_argument(
+        "-b",
+        "--bind",
+        default=DEFAULT_LPORT,
+        help=f"Address to bind the server (default: {DEFAULT_LPORT})",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        default=DEFAULT_PORT,
+        help=f"Port to listen on (default: {DEFAULT_PORT})",
+    )
+    args = parser.parse_args()
+
+    # Validate port
+    if not 21 <= args.port <= 65535:
+        print(f"[!] Invalid port {args.port}. Must be between 21 and 65535.")
+        return None
+
+    return args
+
+
+def main():
+    """Main function."""
+    # Parse arguments
+    args = parse_args()
+    if args is None:
+        return
+
+    # Start HTTP server
+    with ThreadedTCPServer((args.bind, args.port), MyHTTPRequestHandler) as httpd:
+        try:
+            print(f"[*] Starting HTTP server on {args.bind}:{args.port}")
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n[*] Shutting down HTTP server...")
+            httpd.shutdown()
+
+
+if __name__ == "__main__":
+    main()
