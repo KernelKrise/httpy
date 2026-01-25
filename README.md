@@ -1,6 +1,6 @@
 # httpy
 
-A simple Python HTTP download server with cache-disabled headers. Useful for quickly transferring files during CTF challenges or pentesting.
+A simple Python HTTP download/upload server with no caching. Useful for quickly transferring files during CTF challenges or pentesting.
 
 For educational and authorized security testing purposes only.
 
@@ -65,3 +65,6 @@ Upload file (Invoke-WebRequest):
 ```shell
 iwr -Uri http://127.0.0.1:9000/EXAMPLE.md -Method POST -InFile README.md
 ```
+
+## TODO
+- Add installation on Windows
