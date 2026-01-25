@@ -65,9 +65,10 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
         # Check if file exists
         saved_filename = filename
-        i = 0
+        i = 1
         while path.exists(filename):
             filename = saved_filename + "." + str(i)
+            i += 1
 
         return filename
 
