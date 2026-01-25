@@ -1,13 +1,32 @@
 #!/usr/bin/env python3
 """Simple HTTP download server."""
 
-import http.server
-import socketserver
 import argparse
+import http.server
+import logging
+import re
+import socketserver
+from os import path
+from urllib.parse import unquote
+from uuid import uuid4
 
 # Defaults
+LOGGER_NAME: str = "HTTPY"
 DEFAULT_LPORT: str = "0.0.0.0"
 DEFAULT_PORT: int = 9000
+
+# Get logger
+logger = logging.getLogger(LOGGER_NAME)
+logger.setLevel(logging.INFO)
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter(
+    "[%(asctime)s] %(levelname)s: %(message)s", datefmt="%Y-%m-%dT%H:%M:%S%z"
+)
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
 
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -19,6 +38,60 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
         super().end_headers()
+
+    def do_POST(self):  # pylint: disable=invalid-name
+        """Handle file upload via POST."""
+        self._handle_raw_upload()
+
+    def _generate_filename(self) -> str:
+        """Generate filename"""
+        return str(uuid4())
+
+    def _handle_filename(self, filename: str | None) -> str:
+        """Handle filename on file upload"""
+        # Check if no filename
+        if filename is None:
+            return self._generate_filename()
+
+        # Get only filename
+        filename = path.basename(filename)
+
+        # Replace invalid chars with underscore
+        filename = re.sub(r"[^a-zA-Z0-9_.-]", "_", filename)
+
+        # Check if invalid filename
+        if filename in (".", "..", ""):
+            return self._generate_filename()
+
+        # Check if file exists
+        saved_filename = filename
+        i = 0
+        while path.exists(filename):
+            filename = saved_filename + "." + str(i)
+
+        return filename
+
+    def _handle_raw_upload(self):
+        """Handle raw POST data upload."""
+        # Get content length
+        content_length = int(self.headers.get("Content-Length", 0))
+
+        # Get filename
+        filename = unquote(self.path.lstrip("/"))
+
+        # Validate (sanitize) filename
+        filename = self._handle_filename(filename)
+
+        # Write to file
+        with open(filename, "wb") as f:
+            f.write(self.rfile.read(content_length))
+
+        logger.info("Uploaded: %s (%d bytes)", filename, path.getsize(filename))
+
+        # Send response
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"File uploaded successfully")
 
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -48,7 +121,7 @@ def parse_args():
 
     # Validate port
     if not 21 <= args.port <= 65535:
-        print(f"[!] Invalid port {args.port}. Must be between 21 and 65535.")
+        logger.error("Invalid port %d. Must be between 21 and 65535.", args.port)
         return None
 
     return args
@@ -64,10 +137,11 @@ def main():
     # Start HTTP server
     with ThreadedTCPServer((args.bind, args.port), MyHTTPRequestHandler) as httpd:
         try:
-            print(f"[*] Starting HTTP server on {args.bind}:{args.port}")
+            logger.info("Starting HTTP server on %s:%d", args.bind, args.port)
             httpd.serve_forever()
         except KeyboardInterrupt:
-            print("\n[*] Shutting down HTTP server...")
+            print()
+            logger.info("Shutting down HTTP server...")
             httpd.shutdown()
 
 
