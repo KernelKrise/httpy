@@ -31,10 +31,37 @@ options:
 
 ## Examples
 
+Start server:
+```shell
+httpy -b 127.0.0.1 -p 9000   
 ```
-$ ./httpy -b 127.0.0.1 -p 9000   
-[*] Starting HTTP server on 127.0.0.1:9000
-127.0.0.1 - - [24/Jan/2026 01:29:10] "GET /example HTTP/1.1" 200 -
-^C
-[*] Shutting down HTTP server...
+
+Download file (curl):
+```shell
+curl -fsSL http://127.0.0.1:9000/README.md > EXAMPLE.md
+```
+
+Download file (wget):
+```shell
+wget -qO- http://127.0.0.1:9000/README.md > EXAMPLE.md
+```
+
+Download file (Invoke-WebRequest):
+```shell
+iwr http://127.0.0.1:9000/README.md -OutFile EXAMPLE.md
+```
+
+Upload file (curl):
+```shell
+curl --data-binary @README.md http://127.0.0.1:9000/EXAMPLE.md
+```
+
+Upload file (wget):
+```shell
+wget --post-file=README.md http://127.0.0.1:9000/EXAMPLE.md
+```
+
+Upload file (Invoke-WebRequest):
+```shell
+iwr -Uri http://127.0.0.1:9000/EXAMPLE.md -Method POST -InFile README.md
 ```
