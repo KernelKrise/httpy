@@ -1,6 +1,6 @@
 # Variables
 $httpyUrl = "https://raw.githubusercontent.com/KernelKrise/httpy/refs/heads/main/httpy"
-$httpyBatUrl = "https://raw.githubusercontent.com/KernelKrise/httpy/refs/heads/main/httpy"
+$httpyBatUrl = "https://raw.githubusercontent.com/KernelKrise/httpy/refs/heads/main/httpy.bat"
 
 # Logging
 function Write-ILog {
