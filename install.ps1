@@ -64,8 +64,8 @@ if (-not ($pathFolders -contains $scriptsPath)) {
 
 # Download httpy
 Write-Ilog "Downloading httpy"
-Invoke-WebRequest -Uri "${httpyUrl}" -OutFile "${scriptsPath}/httpy.py"
-Invoke-WebRequest -Uri "${httpyBatUrl}" -OutFile "${scriptsPath}/httpy.bat"
+Invoke-WebRequest -UseBasicParsing -Uri "${httpyUrl}" -OutFile "${scriptsPath}/httpy.py"
+Invoke-WebRequest -UseBasicParsing -Uri "${httpyBatUrl}" -OutFile "${scriptsPath}/httpy.bat"
 
 # Contex menu on desktop / folder
 if ($isAdmin) {
